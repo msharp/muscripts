@@ -11,10 +11,13 @@ class MP3FileCleaner
 	"""cleanup ID3 tags and file names on mp3 files found 
 	in a given directory (recursively if specified) """
 	
+    attr_accessor :files
+    attr_accessor :directory
+
 	def initialize( directory = "", recursive = nil)
 		
 		@directory = directory
-		@dir_coll = []
+		@files = []
 		
 		if recursive		# get list of directories	
 
@@ -22,22 +25,17 @@ class MP3FileCleaner
 
 			Find.find(directory) do |path|
 			    if FileTest.directory?(path)
-			    	
-			    	if path.match(/.\/$/)
-			    		add_dir = path
-			    	else
-			    		add_dir = path + "/"
-			    	end		
-					@dir_coll.push(add_dir)
+                    path << "/" unless path.match(/.\/$/)
+					@files.push(path)
 				end	
 			end
 		
 		else
-			@dir_coll.push(directory)
+			@files.push(directory)
 		end
 		
 		puts "got dirs:"
-		puts @dir_coll
+		puts @files
 		
 	end
 
@@ -45,7 +43,6 @@ class MP3FileCleaner
 	def name_case(s)
 		"""format with each word being capitalized"""
 		ret = []
-	
 		s = "" unless s
 
 		s.split.each do |i| 
@@ -58,11 +55,7 @@ class MP3FileCleaner
 	# retag title
 	def tag_title(tag, t = nil ) 
 		
-		if t 
-			new_title = t 
-		else
-			new_title = name_case(tag.title)	
-		end
+		new_title = t || name_case(tag.title)	
 		
 		if tag.title != new_title
 			puts "changing title to: " + new_title
@@ -77,11 +70,7 @@ class MP3FileCleaner
 	# retag artist
 	def tag_artist(tag, t = nil ) 
 		
-		if t 
-			new_artist = t 
-		else
-			new_artist = name_case(tag.artist)	
-		end
+		new_artist = t || name_case(tag.artist)	
 		
 		if tag.artist != new_artist
 			puts "changing artist to: " + new_artist
@@ -96,11 +85,7 @@ class MP3FileCleaner
 	# retag album
 	def tag_album(tag, t = nil ) 
 		
-		if t 
-			new_album = t 
-		else
-			new_album = name_case(tag.album)	
-		end
+		new_album = t || name_case(tag.album)	
 		
 		if tag.album != new_album
 			puts "changing album to: " + new_album
@@ -140,7 +125,7 @@ class MP3FileCleaner
 		"""list mp3s in directory"""
 		
 		# recursive dir listing
-		for d in @dir_coll 
+		for d in @files 
 			
 			Dir.new(d).each do |f| 
 		
@@ -159,7 +144,7 @@ class MP3FileCleaner
 	# tag all files as 'artist'
 	def rename_artist(a)
 		
-		for d in @dir_coll 
+		for d in @files 
 			
 			Dir.new(d).each do |f| 
 		
@@ -181,16 +166,15 @@ class MP3FileCleaner
 	end
 
 	def is_mp3(f)
-		"""is mp3 if ends with '.mp3' """
-		return f.match(/\.[Mm][pP]3$/) # ends with ".mp3"
-	
+		"""it is an mp3 if ends with '.mp3' """
+		return f.match(/\.[Mm][pP]3$/)
 	end
 
 	def dir_cleanup()
 		"""cleanup all mp3 files in a directory (recursive)"""
 		
 		# recursive dir listing
-		for d in @dir_coll 
+		for d in @files 
 		
 			Dir.new(d).each do |f| 
 		
@@ -233,9 +217,7 @@ end
 # ------------------------------------------------------------------------ #
 
 
-#	d = "/home/max/RemoteMusic/_compilations/Top 1000 Pop Hits of the 80s/"
 	d = "/home/max/RemoteMusic/JJ Cale/"
-#	d = "/home/max/tmp/mp3/"
 
 	f = MP3FileCleaner.new(d,true) 
 
